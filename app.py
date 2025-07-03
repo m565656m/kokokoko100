@@ -17,7 +17,7 @@ def send_message():
     text = data.get("text", "No message provided")
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
-        "chat_id": CHAT_ID,
+        "chat_id": 6969597735,
         "text": text
     }
     r = requests.post(url, json=payload)
