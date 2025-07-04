@@ -1,14 +1,10 @@
+import os
 from flask import Flask, request
 import requests
-import os
 
-# قراءة التوكن والشات آي دي من متغيرات البيئة
-7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4 = os.environ.get("7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4")
-6969597735=os.environ.get("6969597735")
-
-# تأكد إنهم موجودين
-if not 7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4 or not 6969597735:
-    raise ValueError("⚠️ BOT_TOKEN أو CHAT_ID مفقودين من Environment Variables!")
+# استبدل القيم الوهمية بقيمك الحقيقية
+BOT_TOKEN = "123456789:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4"   # ← استبدل هذا
+CHAT_ID = "6969597735"                                         # ← استبدل هذا
 
 app = Flask(__name__)
 
@@ -21,9 +17,9 @@ def send_message():
     data = request.json
     text = data.get("text", "🚫 لا توجد رسالة")
 
-    url = f"https://api.telegram.org/bot{7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4}/sendMessage"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
-        "6969597735": CHAT_ID,
+        "chat_id": CHAT_ID,
         "text": text
     }
 
